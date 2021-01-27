@@ -22,6 +22,26 @@ namespace Analizator_Aktywności_Ruchowej
             int iID;
             int IDG;
 
+            String selectIDG = "SELECT MAX(IDG) FROM Godzina";
+            SQLiteCommand Command6 = new SQLiteCommand(selectIDG, databaseObject.Connection);
+            databaseObject.openConnection();
+
+            var reader = Command6.ExecuteReader();
+            reader.Read();
+            String sIDG = String.Format("{0}", reader[0]);
+            if(sIDG != null)
+            {
+                IDG = toInt(sIDG) + 1;
+            }
+            else
+            {
+                IDG = 1;
+            }
+            
+            reader.Close();
+            databaseObject.closeConnection();
+            Command6.Dispose();
+
             System.IO.StreamReader file = new System.IO.StreamReader(file_path);
 
             line = file.ReadLine();
@@ -37,14 +57,15 @@ namespace Analizator_Aktywności_Ruchowej
 
             databaseObject.openConnection();
 
-            var reader = Command.ExecuteReader();
-            reader.Read();
-            String ID = String.Format("{0}", reader[0]);
-            reader.Close();
+            var reader2 = Command.ExecuteReader();
+            reader2.Read();
+            String ID = String.Format("{0}", reader2[0]);
+            reader2.Close();
             databaseObject.closeConnection();
             Command.Dispose();
             
-
+            
+            
             //String ID="";
             if(ID.Length==0){
                 ID = "1";
@@ -56,40 +77,31 @@ namespace Analizator_Aktywności_Ruchowej
             IDD = IDD + iID * 100000000;
 
             string akcja = "INSERT INTO Godzina(`IDG`,`IDD`,`Pelna`,`Kwadrans`,`Polowa`,`trzykwadranse`) Values(@IDG, @IDD, @Pelna, @Kwadrans, @Polowa,@trzykwadranse)";
-            SQLiteCommand Command2 = new SQLiteCommand(akcja, databaseObject.Connection);
 
+            
+
+            SQLiteCommand Command2 = new SQLiteCommand(akcja, databaseObject.Connection);
+            
             databaseObject.openConnection();
 
             while ((line = file.ReadLine()) != null)
             {
                 
                 Command2.Parameters.AddWithValue("@IDD", IDD);
-                Command2.Parameters.AddWithValue("@IDG", iID*100 + toInt(line));
-                line = file.ReadLine();
-                //IDG = IDG + toInt(line);
-                line = file.ReadLine();
+                Command2.Parameters.AddWithValue("@IDG", IDG);
                 kroki_dnia = kroki_dnia+toInt(line);
                 Command2.Parameters.AddWithValue("@Pelna", toInt(line));
-                line = file.ReadLine();
-                line = file.ReadLine();
                 line = file.ReadLine();
                 kroki_dnia = kroki_dnia + toInt(line);
                 Command2.Parameters.AddWithValue("@Kwadrans", toInt(line));
                 line = file.ReadLine();
-                line = file.ReadLine();
-                line = file.ReadLine();
                 kroki_dnia = kroki_dnia + toInt(line);
                 Command2.Parameters.AddWithValue("@Polowa", toInt(line));
-                line = file.ReadLine();
-                line = file.ReadLine();
                 line = file.ReadLine();
                 kroki_dnia = kroki_dnia + toInt(line);
                 Command2.Parameters.AddWithValue("@trzykwadranse", toInt(line));
                 Command2.ExecuteNonQuery();
-
-
-                //System.Console.WriteLine(line);
-                //counter++;
+                IDG++;
             }
             databaseObject.closeConnection();
             Command2.Dispose();
